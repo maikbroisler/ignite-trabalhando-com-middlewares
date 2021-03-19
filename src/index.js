@@ -10,19 +10,77 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = users.find(user => user.username === username);
+  if(!user){
+    return response.status(404).json({ 
+      error: 'Usuário não encontrado!' 
+    });
+  }
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const qtdeTodo = user.todos.length;
+
+  if((!user.pro && qtdeTodo < 10) || (user.pro)){
+    return next();
+  }
+
+  if(!user.pro && qtdeTodo === 10){
+    return response.status(403).json({ 
+      error: 'Usuário atingiu o limite de TODO' 
+    });
+  } 
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id: idTodo } = request.params;
+
+  if(!validate(idTodo)){
+    return response.status(400).json({
+      error: 'ID informado é inválido!'
+    });
+  }
+
+  const user = users.find(user => user.username === username);
+  if(!user) {
+    return response.status(404).json({
+      error: 'Usuário não encontrado!'
+    });
+  }
+
+  const todo = user.todos.find(todo => todo.id === idTodo);
+  if(!todo){
+    return response.status(404).json({
+      error: 'O ID do TODO informado não pertence ao usuário informado!'
+    });
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find(user => user.id === id);
+  if(!user){
+    return response.status(404).json({
+      error: 'Usuário não encontrado!'
+    });
+  }
+  request.user = user;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
